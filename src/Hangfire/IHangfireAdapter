@@ -1,6 +1,6 @@
 using System;
 
-namespace PMWeb.Models.Interface
+namespace Application.Models.Interface
 {
     public interface IHangfireAdapter
     {

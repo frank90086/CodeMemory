@@ -1,0 +1,72 @@
+using NLog;
+using PMWeb.Models.Interface;
+using System.Web;
+using System.Web.Mvc;
+using System.Web.Routing;
+
+namespace Application.Services.Filter
+{
+    public class ExceptionFilter : IExceptionFilter
+    {
+        private IThirdPartyLog _logger;
+
+        public ExceptionFilter(IThirdPartyLog logger)
+        {
+            _logger = logger;
+        }
+
+        public void OnException(ExceptionContext filterContext)
+        {
+            string controllerName = filterContext.Controller.GetType().Name;
+            string actionName = null;
+            string userName = filterContext.HttpContext.User.Identity.Name;
+            string trace = filterContext.Exception.StackTrace;
+            string error = filterContext.Exception.Message;
+
+            string message = string.Format(
+                "{0} | {1} =>\r\n【Message】：\r\n{2}\r\n【Error】：\r\n{3}",
+                controllerName,
+                userName,
+                error,
+                trace
+            );
+            _logger.Error(message);
+            if (!filterContext.IsChildAction && !filterContext.ExceptionHandled)
+            {
+                var innerException = filterContext.Exception;
+                if ((new HttpException(null, innerException).GetHttpCode() == 500))
+                {
+                    if (typeof(HttpAntiForgeryException).IsInstanceOfType(innerException))
+                    {
+                        controllerName = "Error";
+                        actionName = "AntiForgeryTokenError";
+                        filterContext.HttpContext.Response.StatusCode = 501;
+                    }
+                    else if (typeof(HttpRequestValidationException).IsInstanceOfType(innerException))
+                    {
+                        controllerName = "Error";
+                        actionName = "XSSError";
+                        filterContext.HttpContext.Response.StatusCode = 512;
+                    }
+                    else
+                    {
+                        controllerName = "Error";
+                        actionName = "InternalError";
+                    }
+
+                    if (filterContext.HttpContext.Request.IsAjaxRequest())
+                        filterContext.HttpContext.Response.End();
+
+                    var routeValues = new RouteValueDictionary();
+                    routeValues["controller"] = controllerName;
+                    routeValues["action"] = actionName;
+                    filterContext.Result = new RedirectToRouteResult(routeValues);
+                    filterContext.ExceptionHandled = true;
+                    filterContext.HttpContext.Response.Clear();
+                    filterContext.HttpContext.Response.StatusCode = 500;
+                    filterContext.HttpContext.Response.TrySkipIisCustomErrors = true;
+                }
+            }
+        }
+    }
+}

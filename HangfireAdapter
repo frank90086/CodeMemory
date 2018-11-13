@@ -1,11 +1,11 @@
 using Hangfire;
 using Hangfire.Common;
-using PMWeb.Models.Interface;
+using Application.Models.Interface;
 using System;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace PMWeb.Services
+namespace Application.Services
 {
     public class HangfireAdapter : IHangfireAdapter
     {

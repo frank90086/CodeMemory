@@ -1,0 +1,46 @@
+using System;
+using System.Collections.Generic;
+using System.Web.Mvc;
+
+namespace Application.Extensions
+{
+    public static class DictionaryExtension
+    {
+        public static IEnumerable<SelectListItem> GetSelectList<Tkey, Tvalue>(this Dictionary<Tkey, Tvalue> source, string paten = null)
+        {
+            var selectList = new List<SelectListItem>();
+            foreach (var elemet in source)
+            {
+                if (!String.IsNullOrEmpty(paten))
+                {
+                    if (paten.Equals(Convert.ToString(elemet.Value)))
+                    {
+                        selectList.Add(new SelectListItem
+                        {
+                            Value = Convert.ToString(elemet.Key),
+                            Text = Convert.ToString(elemet.Value),
+                            Selected = true
+                        });
+                    }
+                    else
+                    {
+                        selectList.Add(new SelectListItem
+                        {
+                            Value = Convert.ToString(elemet.Key),
+                            Text = Convert.ToString(elemet.Value)
+                        });
+                    }
+                }
+                else
+                {
+                    selectList.Add(new SelectListItem
+                    {
+                        Value = Convert.ToString(elemet.Key),
+                        Text = Convert.ToString(elemet.Value)
+                    });
+                }
+            }
+            return selectList;
+        }
+    }
+}

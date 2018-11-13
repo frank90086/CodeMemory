@@ -1,0 +1,19 @@
+using System.ComponentModel;
+using System.Reflection;
+
+namespace Application.Extensions
+{
+    public static class PropertyExtension
+    {
+        public static string GetPropertyDescription<TProp>(this TProp source) where TProp: PropertyInfo
+        {
+            DescriptionAttribute[] attributes = (DescriptionAttribute[])source.GetCustomAttributes(
+                typeof(DescriptionAttribute), false);
+
+            if (attributes != null && attributes.Length > 0)
+                return attributes[0].Description;
+            else
+                return source.ToString();
+        }
+    }
+}

@@ -1,0 +1,47 @@
+using System;
+using System.Reflection;
+using System.Text;
+
+namespace Application.Extensions
+{
+    public static class StringExtension
+    {
+        public static string Cutoff(this string value, int count)
+        {
+            if (!String.IsNullOrEmpty(value))
+                return value.Length > count ? value.Substring(0, count) : value;
+            return value;
+        }
+
+        public static string AutoReplace(this string value)
+        {
+            return value.Replace("\\r\\n", "").Replace("\\r", "").Replace("\r\n", "").Replace("\r", "").Replace("\n", "");
+        }
+
+        public static string Repeat(this string input, int count)
+        {
+            if (!string.IsNullOrEmpty(input))
+            {
+                StringBuilder builder = new StringBuilder(input.Length * count);
+
+                for (int i = 0; i < count; i++) builder.Append(input);
+
+                return builder.ToString();
+            }
+            return string.Empty;
+        }
+
+        public static string MapDescription<T>(this string value) where T: class
+        {
+            PropertyInfo t = typeof(T).GetProperty(value);
+            return t.GetPropertyDescription();
+        }
+
+        public static string RemoveLastChar(this string value)
+        {
+            if (String.IsNullOrEmpty(value)) return null;
+            value = value.Remove(value.Length - 1, 1);
+            return value;
+        }
+    }
+}

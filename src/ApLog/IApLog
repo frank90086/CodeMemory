@@ -1,7 +1,7 @@
-using PMWeb.Enums;
+using Application.Enums;
 using System.Collections.Generic;
 
-namespace PMWeb.Models.Interface
+namespace Application.Models.Interface
 {
     public interface IApLog
     {

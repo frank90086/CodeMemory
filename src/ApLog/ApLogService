@@ -1,0 +1,89 @@
+using Newtonsoft.Json;
+using Application.Enums;
+using Application.Models;
+using Application.Models.Interface;
+using System.Collections.Generic;
+
+namespace Application.Services
+{
+    public class ApLogService : IApLog
+    {
+        private IComparer _comparer;
+        private ILog _logService;
+        public ApLogService(IComparer comparer, ILog logService)
+        {
+            _comparer = comparer;
+            _logService = logService;
+        }
+
+        static string[] excludes = new string[] { "Str", "List", "Light", "EstProgressRate", "ProjectCode", "Creator", "CreateDatetime", "UpdateDatetime", "PID", "Updater", "ID" };
+        public void Creator<T>(T current, T original, string template, string userName, string ip, string formId = null,
+            TableType tableType = TableType.None, ActionType actionType = ActionType.None, ResultType resultType = ResultType.None, string info = null)
+        {
+            List<ApLogContentModel> difference;
+            bool isSame = _comparer.Compare(current, original, excludes, out difference);
+            ApLogModel model = new ApLogModel();
+            model.Id = IdGenerator.IdGenerate(template, userName);
+            model.FormId = formId;
+            model.UserName = userName;
+            model.Ip = ip;
+            model.TableType = tableType;
+            model.ActionType = actionType;
+            model.ResultType = resultType;
+            model.Content = JsonConvert.SerializeObject(difference);
+            model.Info = info;
+            _logService.CreateApLog(model);
+        }
+
+        public void Creator(string template, string userName, string ip, 
+            ActionType actionType = ActionType.None, ResultType resultType = ResultType.None, string info = null)
+        {
+            ApLogModel model = new ApLogModel();
+            model.Id = IdGenerator.IdGenerate(template, userName);
+            model.UserName = userName;
+            model.Ip = ip;
+            model.ActionType = actionType;
+            model.ResultType = resultType;
+            model.Info = info;
+            _logService.CreateApLog(model);
+        }
+
+        public void Creator(string template, string userName, string ip, string formId, TableType tableType = TableType.None,
+            ActionType actionType = ActionType.None, ResultType resultType = ResultType.None, string info = null)
+        {
+            ApLogModel model = new ApLogModel();
+            model.Id = IdGenerator.IdGenerate(template, userName);
+            model.FormId = formId;
+            model.UserName = userName;
+            model.Ip = ip;
+            model.TableType = tableType;
+            model.ActionType = actionType;
+            model.ResultType = resultType;
+            model.Info = info;
+            _logService.CreateApLog(model);
+        }
+
+        public void Creator(string template, string userName, string ip, List<ApLogContentModel> difference,
+            string formId = null, TableType tableType = TableType.None, ActionType actionType = ActionType.None, 
+            ResultType resultType = ResultType.None, string info = null)
+        {
+            ApLogModel model = new ApLogModel();
+            model.Id = IdGenerator.IdGenerate(template, userName);
+            model.FormId = formId;
+            model.UserName = userName;
+            model.Ip = ip;
+            model.TableType = tableType;
+            model.ActionType = actionType;
+            model.ResultType = resultType;
+            model.Content = JsonConvert.SerializeObject(difference);
+            model.Info = info;
+            _logService.CreateApLog(model);
+        }
+
+        public bool Check<T>(T current, T original, out List<ApLogContentModel> difference)
+        {
+            bool isSame = _comparer.Compare(current, original, excludes, out difference);
+            return isSame;
+        }
+    }
+}

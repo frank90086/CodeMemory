@@ -1,0 +1,11 @@
+using System;
+
+namespace PMWeb.Models.Interface
+{
+    public interface IHangfireAdapter
+    {
+        void Enqueue<T>(string method, T instance, object[] obj) where T : class;
+        void Schedule<T>(string method, TimeSpan offset, T instance, object[] obj) where T : class;
+        void Recurring<T>(string method, string cronExpressino, string patten, object[] obj) where T : class;
+    }
+}

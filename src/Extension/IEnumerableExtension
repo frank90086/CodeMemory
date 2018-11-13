@@ -1,0 +1,34 @@
+using System.Collections.Generic;
+using System.Web.Mvc;
+
+namespace Application.Extensions
+{
+    public static class IEnumerableExtension
+    {
+        public static IEnumerable<SelectListItem> GetSelectList<T>(this IEnumerable<T> source, string patten = null )
+        {
+            var selectList = new List<SelectListItem>();
+            foreach (var elemet in source)
+            {
+                if (elemet.ToString() == patten)
+                {
+                    selectList.Add(new SelectListItem
+                    {
+                        Value = elemet.ToString(),
+                        Text = elemet.ToString(),
+                        Selected = true
+                    });
+                }
+                else
+                {
+                    selectList.Add(new SelectListItem
+                    {
+                        Value = elemet.ToString(),
+                        Text = elemet.ToString()
+                    });
+                }
+            }
+            return selectList;
+        }
+    }
+}

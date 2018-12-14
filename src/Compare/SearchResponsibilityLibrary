@@ -1,0 +1,157 @@
+using Application.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+
+namespace Application.Services.ServiceModel
+{
+    public abstract class SearchResponsibilityLibrary
+    {
+        public SearchResponsibilityLibrary Next { get; set; }
+
+        public SearchResponsibilityLibrary() { }
+
+        public void SetNext(SearchResponsibilityLibrary next)
+        {
+            if (Next == null)
+                Next = next;
+        }
+        public abstract List<ProjectModels> Do(SearchResponsibilityModel model);
+        public abstract List<ProjectMDModels> DoMD(SearchResponsibilityModel model);
+    }
+
+    public class POResponsibility : SearchResponsibilityLibrary
+    {
+        public override List<ProjectModels> Do(SearchResponsibilityModel model)
+        {
+            List<ProjectModels> newList = new List<ProjectModels>();
+            if (model.IsPO)
+            {
+                var polist = model.List.Where(x => x.PO == model.CName).ToList();
+                newList.AddRange(polist);
+                foreach (var item in polist)
+                    model.List.Remove(item);
+            }
+
+            if (Next != null)
+                newList.AddRange(Next.Do(model));
+            return newList.OrderByDescending(x => x.CreateDatetime).ToList();
+        }
+
+        public override List<ProjectMDModels> DoMD(SearchResponsibilityModel model)
+        {
+            List<ProjectMDModels> newList = new List<ProjectMDModels>();
+            if (model.IsPO)
+            {
+                var polist = model.MDList.Where(x => x.PO == model.CName).ToList();
+                newList.AddRange(polist);
+                foreach (var item in polist)
+                    model.MDList.Remove(item);
+            }
+
+            if (Next != null)
+                newList.AddRange(Next.DoMD(model));
+            return newList.OrderByDescending(x => x.CreateDatetime).ToList();
+        }
+    }
+
+    public class GroupResponsibility : SearchResponsibilityLibrary
+    {
+        public override List<ProjectModels> Do(SearchResponsibilityModel model)
+        {
+            List<ProjectModels> newList = new List<ProjectModels>();
+            var grouplist = model.List.Where(x => x.RequireGroupCName == model.GroupName).ToList();
+            newList.AddRange(grouplist);
+            foreach (var item in grouplist)
+                model.List.Remove(item);
+
+            if (Next != null)
+                newList.AddRange(Next.Do(model));
+            return newList.OrderByDescending(x => x.CreateDatetime).ToList();
+        }
+
+        public override List<ProjectMDModels> DoMD(SearchResponsibilityModel model)
+        {
+            List<ProjectMDModels> newList = new List<ProjectMDModels>();
+            var grouplist = model.MDList.Where(x => x.RequireGroup == model.GroupName).ToList();
+            newList.AddRange(grouplist);
+            foreach (var item in grouplist)
+                model.MDList.Remove(item);
+
+            if (Next != null)
+                newList.AddRange(Next.DoMD(model));
+            return newList.OrderByDescending(x => x.CreateDatetime).ToList();
+        }
+    }
+
+    public class RequireUserResponsibility : SearchResponsibilityLibrary
+    {
+        public override List<ProjectModels> Do(SearchResponsibilityModel model)
+        {
+            List<ProjectModels> newList = new List<ProjectModels>();
+            var requireUserlist = model.List.Where(x => x.RequireUser == model.CName).ToList();
+            newList.AddRange(requireUserlist);
+            foreach (var item in requireUserlist)
+                model.List.Remove(item);
+
+            if (Next != null)
+                newList.AddRange(Next.Do(model));
+            return newList.OrderByDescending(x => x.CreateDatetime).ToList();
+        }
+
+        public override List<ProjectMDModels> DoMD(SearchResponsibilityModel model)
+        {
+            List<ProjectMDModels> newList = new List<ProjectMDModels>();
+            var requireUserlist = model.MDList.Where(x => x.RequireUser == model.CName).ToList();
+            newList.AddRange(requireUserlist);
+            foreach (var item in requireUserlist)
+                model.MDList.Remove(item);
+
+            if (Next != null)
+                newList.AddRange(Next.DoMD(model));
+            return newList.OrderByDescending(x => x.CreateDatetime).ToList();
+        }
+    }
+
+    public class UnitPriceResponsibility : SearchResponsibilityLibrary
+    {
+        public override List<ProjectModels> Do(SearchResponsibilityModel model)
+        {
+            return new List<ProjectModels>();
+        }
+
+        public override List<ProjectMDModels> DoMD(SearchResponsibilityModel model)
+        {
+            List<ProjectMDModels> newList = new List<ProjectMDModels>();
+            if (Next != null)
+                newList.AddRange(Next.DoMD(model));
+            else
+                newList.AddRange(model.MDList);
+            foreach (var item in newList)
+                item.UnitPrice = 0;
+            return newList.OrderByDescending(x => x.CreateDatetime).ToList();
+        }
+    }
+
+    public class CreateUserResponsibility : SearchResponsibilityLibrary
+    {
+        public override List<ProjectModels> Do(SearchResponsibilityModel model)
+        {
+            List<ProjectModels> newList = new List<ProjectModels>();
+            var requireUserlist = model.List.Where(x => x.Creator == model.UserName).ToList();
+            newList.AddRange(requireUserlist);
+            foreach (var item in requireUserlist)
+                model.List.Remove(item);
+
+            if (Next != null)
+                newList.AddRange(Next.Do(model));
+            return newList.OrderByDescending(x => x.CreateDatetime).ToList();
+        }
+
+        public override List<ProjectMDModels> DoMD(SearchResponsibilityModel model)
+        {
+            return new List<ProjectMDModels>();
+        }
+    }
+}

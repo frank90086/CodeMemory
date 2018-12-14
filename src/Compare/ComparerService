@@ -1,13 +1,13 @@
-using PMWeb.Models;
+using Application.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using PMWeb.Extensions;
-using PMWeb.Models.Interface;
-using PMWeb.Services.ServiceModel;
+using Application.Extensions;
+using Application.Models.Interface;
+using Application.Services.ServiceModel;
 
-namespace PMWeb.Services
+namespace Application.Services
 {
     public class ComparerService : IComparer
     {

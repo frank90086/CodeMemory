@@ -1,0 +1,6 @@
+public class ApLogContentModel
+    {
+        public string FieldName { get; set; }
+        public string Before { get; set; }
+        public string After { get; set; }
+    }

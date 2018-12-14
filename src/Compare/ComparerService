@@ -1,0 +1,134 @@
+using PMWeb.Models;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
+using PMWeb.Extensions;
+using PMWeb.Models.Interface;
+using PMWeb.Services.ServiceModel;
+
+namespace PMWeb.Services
+{
+    public class ComparerService : IComparer
+    {
+        public bool Compare<T>(T current, T original, string[] excludes,out List<ApLogContentModel> difference)
+        {
+            difference = new List<ApLogContentModel>();
+            bool isSame = true;
+            if (excludes == null) excludes = new string[] { };
+            var properties = TypeDescriptor.GetProperties(typeof(T));
+
+            foreach (PropertyDescriptor property in properties)
+            {
+                var propertyType = Type.GetTypeCode(property.PropertyType);
+                if (excludes.Where(x => !property.Name.Contains("FTE"))
+                    .Where(x => !property.Name.Contains("Outsourced"))
+                    .Where(x => property.Name.Contains(x)).Count() > 0) continue;
+                //if (property.Name == "ExpFTE" ||
+                //    property.Name == "ExpOutsourced" ||
+                //    property.Name == "FTE" ||
+                //    property.Name == "Outsourced") continue;
+                var currentValue = property.GetValue(current);
+                var originalValue = property.GetValue(original);
+
+                switch (propertyType)
+                {
+                    case TypeCode.Int16:
+                    case TypeCode.UInt16:
+                    case TypeCode.Int32:
+                    case TypeCode.UInt32:
+                    case TypeCode.Int64:
+                    case TypeCode.UInt64:
+                        if (property.PropertyType.IsEnum)
+                        {
+                            var t = property.PropertyType;
+                            currentValue = Enum.Parse(t, currentValue.ToString());
+                            originalValue = Enum.Parse(t, originalValue.ToString());
+                            if (currentValue.ToString() != originalValue.ToString())
+                            {
+                                difference.Add(new ApLogContentModel()
+                                {
+                                    FieldName = !String.IsNullOrEmpty(property.Description) ? property.Description : property.Name,
+                                    Before = originalValue.GetEnumDescription(),
+                                    After = currentValue.GetEnumDescription()
+                                });
+                            }
+                        }
+                        else if (int.Parse(currentValue.ToString()) != int.Parse(originalValue.ToString()))
+                        {
+                            difference.Add(new ApLogContentModel()
+                            {
+                                FieldName = !String.IsNullOrEmpty(property.Description) ? property.Description : property.Name,
+                                Before = originalValue?.ToString(),
+                                After = currentValue?.ToString()
+                            });
+                        }
+                        break;
+                    case TypeCode.Single:
+                    case TypeCode.Double:
+                    case TypeCode.Decimal:
+                        if (double.Parse(currentValue.ToString()) != double.Parse(originalValue.ToString()))
+                        {
+                            difference.Add(new ApLogContentModel()
+                            {
+                                FieldName = !String.IsNullOrEmpty(property.Description) ? property.Description : property.Name,
+                                Before = originalValue?.ToString(),
+                                After = currentValue?.ToString()
+                            });
+                        }
+                        break;
+                    case TypeCode.DateTime:
+                    case TypeCode.String:
+                    default:
+                        if (currentValue?.ToString() != originalValue?.ToString())
+                        {
+                            difference.Add(new ApLogContentModel()
+                            {
+                                FieldName = !String.IsNullOrEmpty(property.Description) ? property.Description : property.Name,
+                                Before = originalValue?.ToString(),
+                                After = currentValue?.ToString()
+                            });
+                        }
+                        break;
+                }
+            }
+
+            if (difference.Count > 0)
+                isSame = false;
+            return isSame;
+        }
+
+        public List<ProjectModels> SearchCompare(SearchResponsibilityModel model, string roleName)
+        {
+            if (roleName == "ITColleaque" || roleName == "Vender")
+                return model.List;
+            SearchResponsibilityLibrary po = ReflectionObject.GenericReflection<SearchResponsibilityLibrary>("POResponsibility");
+            SearchResponsibilityLibrary group = ReflectionObject.GenericReflection<SearchResponsibilityLibrary>("GroupResponsibility");
+            SearchResponsibilityLibrary requireUser = ReflectionObject.GenericReflection<SearchResponsibilityLibrary>("RequireUserResponsibility");
+            SearchResponsibilityLibrary createUser = ReflectionObject.GenericReflection<SearchResponsibilityLibrary>("CreateUserResponsibility");
+            requireUser.SetNext(createUser);
+            group.SetNext(requireUser);
+            po.SetNext(group);
+            return po.Do(model);
+        }
+
+        public List<ProjectMDModels> SearchMDCompare(SearchResponsibilityModel model, string roleName)
+        {
+            SearchResponsibilityLibrary po = ReflectionObject.GenericReflection<SearchResponsibilityLibrary>("POResponsibility");
+            SearchResponsibilityLibrary group = ReflectionObject.GenericReflection<SearchResponsibilityLibrary>("GroupResponsibility");
+            SearchResponsibilityLibrary requireUser = ReflectionObject.GenericReflection<SearchResponsibilityLibrary>("RequireUserResponsibility");
+            SearchResponsibilityLibrary unitPrice = ReflectionObject.GenericReflection<SearchResponsibilityLibrary>("UnitPriceResponsibility");
+            group.SetNext(requireUser);
+            po.SetNext(group);
+            if (roleName == "ITColleaque" || roleName == "Vender")
+            {
+                return unitPrice.DoMD(model);
+            }
+            else
+            {
+                unitPrice.SetNext(po);
+                return unitPrice.DoMD(model);
+            }
+        }
+    }
+}

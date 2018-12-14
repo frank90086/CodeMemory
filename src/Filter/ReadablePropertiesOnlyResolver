@@ -1,0 +1,20 @@
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+using System.IO;
+using System.Reflection;
+
+namespace Application.Services.Filter
+{
+    public class ReadablePropertiesOnlyResolver : DefaultContractResolver
+    {
+        protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization)
+        {
+            JsonProperty property = base.CreateProperty(member, memberSerialization);
+            if (typeof(Stream).IsAssignableFrom(property.PropertyType) || member.Name == "Password")
+            {
+                property.Ignored = true;
+            }
+            return property;
+        }
+    }
+}

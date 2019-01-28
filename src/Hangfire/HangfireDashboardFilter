@@ -1,0 +1,17 @@
+using Hangfire.Dashboard;
+using Microsoft.Owin;
+using System.Linq;
+
+namespace Application.Services.Filter
+{
+    public class HangfireDashboardFilter : IDashboardAuthorizationFilter
+    {
+        string[] validator = new string[] { "username" };
+        public bool Authorize(DashboardContext context)
+        {
+            var owinContext = new OwinContext(context.GetOwinEnvironment());
+            var userName = owinContext.Authentication.User.Identity.Name;
+            return validator.Contains(userName);
+        }
+    }
+}

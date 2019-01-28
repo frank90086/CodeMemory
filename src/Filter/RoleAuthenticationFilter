@@ -1,0 +1,28 @@
+using Application.Extensions;
+using System.Linq;
+using System.Web.Mvc;
+
+namespace Application.Services.Filter
+{
+    public class RoleAuthenticationFilter : AuthorizeAttribute
+    {
+        public override void OnAuthorization(AuthorizationContext filterContext)
+        {
+            var role = filterContext.HttpContext.User.Identity.GetUserRole();
+            string controllerName = filterContext.Controller.GetType().Name.Replace("Controller", "");
+            string actionName = filterContext.ActionDescriptor.ActionName;
+            if (role != null)
+            {
+                var list = role.ContentModel.Where(x => x.Controller == controllerName).Where(x => x.Action == actionName);
+                if (list.Count() == 0)
+                {
+                    if (filterContext.HttpContext.Request.IsAjaxRequest())
+                    {
+                        filterContext.HttpContext.Response.StatusCode = 403;
+                        filterContext.Result = new JsonResult();
+                    }
+                }
+            }
+        }
+    }
+}

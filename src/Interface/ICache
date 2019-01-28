@@ -1,0 +1,12 @@
+namespace Application.Models.Interface
+{
+    public interface ICache
+    {
+        T Get<T>(string patten);
+        T GetFromDB<T>(string parmName) where T : class;
+        void Set(string patten, object model);
+        void DissposeCache(string patten);
+        void DissposeAll();
+
+    }
+}

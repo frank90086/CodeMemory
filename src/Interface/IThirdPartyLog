@@ -1,0 +1,11 @@
+namespace Application.Models.Interface
+{
+    public interface IThirdPartyLog
+    {
+        void Trace(string message);
+        void Error(string message);
+        void Fatal(string message);
+        void Info(string message);
+        void Debug(string message);
+    }
+}

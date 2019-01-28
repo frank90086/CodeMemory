@@ -1,0 +1,12 @@
+using Application.Enums;
+
+namespace Application.Services.ServiceModel
+{
+    public abstract class ParmCacheLibrary
+    {
+        public virtual string ServiceName { get; set; }
+        public virtual string ActionName { get; set; }
+        public virtual string CatchName { get; set; }
+        public virtual object[] ParmObject { get; set; } = null;
+    }
+}

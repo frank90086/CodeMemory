@@ -15,7 +15,10 @@ namespace Application.Extensions
 
         public static string AutoReplace(this string value)
         {
-            return value.Replace("\\r\\n", "").Replace("\\r", "").Replace("\r\n", "").Replace("\r", "").Replace("\n", "");
+            if (String.IsNullOrEmpty(value))
+                return "";
+            else
+                return value.Replace("\\r\\n", "").Replace("\\r", "").Replace("\r\n", "").Replace("\r", "").Replace("\n", "");
         }
 
         public static string Repeat(this string input, int count)

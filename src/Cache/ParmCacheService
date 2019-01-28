@@ -1,0 +1,64 @@
+using Application.Models.Interface;
+using Application.Services.ServiceModel;
+using System;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.Caching;
+
+namespace Application.Services
+{
+    public class ParmCacheService : ICache
+    {
+        private const string baseName = "Application.Services.";
+        private MemoryCache _cache = MemoryCache.Default;
+        private CacheItemPolicy Policy { get; set; } = new CacheItemPolicy() { AbsoluteExpiration = DateTime.Now.AddMinutes(60) };
+
+        public T GetFromDB<T>(string parmName) where T: class
+        {
+            ParmCacheLibrary cacheParm = ReflectionObject.GenericReflection<ParmCacheLibrary>(parmName + "Parm");
+            return _getValue<T>(cacheParm.ServiceName, cacheParm.ActionName, cacheParm.CatchName, cacheParm.ParmObject);
+        }
+
+        public T Get<T>(string patten)
+        {
+            if (_cache[patten] != null)
+                return (T)_cache[patten];
+            else
+                return Activator.CreateInstance<T>();
+        }
+
+        public void Set(string patten, object model) => _cache.Set(patten, model, Policy);
+
+        public void DissposeCache(string patten) => _cache.Remove(patten);
+
+        public void DissposeAll()
+        {
+            _cache.ToList().ForEach(a => {
+                if (!a.Key.Contains("search") && !a.Key.Contains("MetadataPrototypes")) {
+                    _cache.Remove(a.Key);
+                }
+            });
+        }
+
+        private T _getValue<T>(string serviceName, string methodName, string patten, object[] obj) where T: class
+        {
+            if (_cache[patten] != null)
+                return _cache[patten] as T;
+            else
+            {
+                try
+                {
+                    Type type = Type.GetType(baseName + serviceName);
+                    MethodInfo methodInfo = type.GetMethod(methodName);
+                    var list = methodInfo.Invoke(Activator.CreateInstance(type), obj);
+                    _cache.Set(patten, list, Policy);
+                    return list as T;
+                }
+                catch (Exception e)
+                {
+                    throw e;
+                }
+            }
+        }
+    }
+}

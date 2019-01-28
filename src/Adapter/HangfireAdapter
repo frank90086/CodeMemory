@@ -1,0 +1,38 @@
+using Hangfire;
+using Hangfire.Common;
+using Application.Models.Interface;
+using System;
+using System.Reflection;
+using System.Threading.Tasks;
+
+namespace Application.Services
+{
+    public class HangfireAdapter : IHangfireAdapter
+    {
+        private IRecurringJobManager _recurringJob;
+        public HangfireAdapter(IRecurringJobManager recurringJob)
+        {
+            _recurringJob = recurringJob;
+        }
+
+        public void Enqueue<T>(string method, T instance, object[] obj) where T : class
+        {
+            Schedule(method, TimeSpan.FromSeconds(0), instance, obj);
+        }
+
+        public void Schedule<T>(string method, TimeSpan offset, T instance, object[] obj) where T : class
+        {
+            Type type = typeof(T);
+            MethodInfo methodInfo = type.GetMethod(method);
+            Task.Run(() => Task.Delay(offset).ContinueWith((t) => methodInfo.Invoke(instance, obj)));
+        }
+
+        public void Recurring<T>(string method, string cronExpressino, string patten, object[] obj) where T : class
+        {
+            Type type = typeof(T);
+            MethodInfo methodInfo = type.GetMethod(method);
+            Job job = new Job(type, methodInfo, obj);
+            _recurringJob.AddOrUpdate($"{type.Name}-{patten}", job, cronExpressino, TimeZoneInfo.Local);
+        }
+    }
+}

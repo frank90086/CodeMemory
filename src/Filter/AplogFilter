@@ -1,0 +1,91 @@
+using Newtonsoft.Json;
+using NLog;
+using Application.Extensions;
+using Application.Models;
+using System.Collections;
+using System.Collections.Generic;
+using System.Reflection;
+using System.Web.Mvc;
+
+namespace Application.Services.Filter
+{
+    public class AplogFilter : ActionFilterAttribute, IActionFilter
+    {
+        Logger logger = LogManager.GetCurrentClassLogger();
+        public override void OnActionExecuting(ActionExecutingContext filterContext)
+        {
+            string parametersInfo = JsonConvert.SerializeObject(filterContext.ActionParameters, new JsonSerializerSettings()
+            {
+                ContractResolver = new ReadablePropertiesOnlyResolver()
+            });
+
+            string controllerName = filterContext.Controller.GetType().Name;
+            string actionName = filterContext.ActionDescriptor.ActionName;
+            string userName = filterContext.HttpContext.User.Identity.Name;
+            string ip = filterContext.HttpContext.Request.UserHostAddress;
+
+            string message = string.Format(
+                "{0} | {1} | {2} | {3} \r\n",
+                controllerName,
+                actionName,
+                userName,
+                ip
+            );
+            
+            var parameters = filterContext.ActionParameters;
+            message = _parameterLog(parameters, message);
+            logger.Info(message);
+
+            switch (actionName)
+            {
+                case "LogOff":
+                    logger.Trace(userName + " | 登出系統");
+                    break;
+                case "Login":
+                    if (filterContext.ActionParameters.ContainsKey("model"))
+                    {
+                        LoginViewModel model = (LoginViewModel)filterContext.ActionParameters["model"];
+                        logger.Trace(model.UserName + " | 登入系統");
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        private string _parameterLog(IDictionary<string, object> dics, string message, int node = 0)
+        {
+            foreach (var dic in dics)
+            {
+                if (dic.Key == "Password" || dic.Key == "InputStream") continue;
+                if (dic.Value != null)
+                {
+                    if ((dic.Value.GetType().Attributes & TypeAttributes.Sealed) == 0)
+                    {
+                        var propertyInfos = dic.Value.GetType().GetProperties();
+                        Dictionary<string, object> newDic = new Dictionary<string, object>();
+                        foreach (var propInfo in propertyInfos)
+                        {
+                            if (propInfo.Name == "Item")
+                            {
+                                for (int i = 0; i < (dic.Value as IList).Count; i++)
+                                    newDic.Add(propInfo.Name + i, propInfo.GetValue(dic.Value, new object[] { i }));
+                            }
+                            else
+                                newDic.Add(propInfo.Name, propInfo.GetValue(dic.Value));
+                        }   
+                        message += string.Format(
+                        "{0}{1} : \r\n", " ".Repeat(node * 2), dic.Key);
+                        message = _parameterLog(newDic, message, node + 1);
+                    }
+                    else
+                    {
+                        message += string.Format(
+                        "{0}{1} : {2}\r\n", " ".Repeat(node * 2), dic.Key, dic.Value);
+                    }
+                }
+            }
+            return message;
+        }
+    }
+}

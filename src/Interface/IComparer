@@ -1,0 +1,12 @@
+using System.Collections.Generic;
+
+namespace Application.Models.Interface
+{
+    public interface IComparer
+    {
+        bool Compare<T>(T current, T original, string[] excludes, out List<ApLogContentModel> difference);
+        List<ProjectModels> SearchCompare(SearchResponsibilityModel model, string roleName);
+
+        List<ProjectMDModels> SearchMDCompare(SearchResponsibilityModel model, string roleName);
+    }
+}

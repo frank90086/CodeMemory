@@ -6,14 +6,14 @@ namespace Application.Extensions
 {
     public static class DictionaryExtension
     {
-        public static IEnumerable<SelectListItem> GetSelectList<Tkey, Tvalue>(this Dictionary<Tkey, Tvalue> source, string paten = null)
+        public static IEnumerable<SelectListItem> GetSelectList<Tkey, Tvalue>(this Dictionary<Tkey, Tvalue> source, IEnumerable<Tkey> patten = null)
         {
             var selectList = new List<SelectListItem>();
             foreach (var elemet in source)
             {
-                if (!String.IsNullOrEmpty(paten))
+                if (patten != null)
                 {
-                    if (paten.Equals(Convert.ToString(elemet.Value)))
+                    if (patten.Contains(elemet.Key))
                     {
                         selectList.Add(new SelectListItem
                         {
@@ -41,6 +41,24 @@ namespace Application.Extensions
                 }
             }
             return selectList;
+        }
+
+        public static Dictionary<Tkey, Tvalue> ItemFilter<Tkey, Tvalue>(this Dictionary<Tkey, Tvalue> source, List<string> filter)
+        {
+            var newList = new Dictionary<Tkey, Tvalue>(source);
+            if (filter.Count() > 0)
+            {
+                Dictionary<Tkey, Tvalue> deleteList = new Dictionary<Tkey, Tvalue>();
+                foreach (KeyValuePair<Tkey, Tvalue> item in source)
+                {
+                    if (filter.Contains<string>(item.Value.ToString()))
+                        deleteList.Add(item.Key, item.Value);
+                }
+
+                foreach (KeyValuePair<Tkey, Tvalue> item in deleteList)
+                    newList.Remove(item.Key);
+            }
+            return newList;
         }
     }
 }
